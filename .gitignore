@@ -1,0 +1,25 @@
+# Dépendances
+node_modules
+
+# Build
+dist
+dist-ssr
+*.tsbuildinfo
+
+# Environnement (jamais commité)
+.env
+.env.local
+.env.*.local
+
+# Logs & divers
+*.log
+npm-debug.log*
+.DS_Store
+
+# Éditeurs
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Supabase local
+supabase/.temp

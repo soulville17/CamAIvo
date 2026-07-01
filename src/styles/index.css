@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Tokens CamAIvo (miroir de tailwind.config.ts) ────────────── */
+:root {
+  --cam-bg: #0a0b0f;
+  --cam-bg-soft: #0e1117;
+  --cam-glass: rgba(255, 255, 255, 0.04);
+  --cam-glass-border: rgba(255, 255, 255, 0.08);
+  --cam-ember: #ff5a1f;
+  --cam-ember-light: #ff7a00;
+  --cam-live: #22c55e;
+  --cam-cloud: #3b82f6;
+  --cam-token: #f5c242;
+  --cam-text: #f5f7fa;
+  --cam-text-muted: #9aa0aa;
+}
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+  body {
+    @apply min-h-screen bg-ink text-snow font-sans;
+    background-image: linear-gradient(180deg, #0a0b0f 0%, #0e1117 100%);
+    background-attachment: fixed;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight;
+  }
+}
+
+@layer components {
+  /* Surface verre réutilisable (utilisée par GlassPanel) */
+  .glass {
+    @apply bg-glass border border-glass-border backdrop-blur-xl rounded-2xl shadow-glass;
+  }
+}
+
+/* Scrollbar discrète, cohérente avec le thème sombre */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
