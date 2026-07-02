@@ -23,6 +23,11 @@ export interface SwapOptions {
   mouthMask?: boolean;
   /** Amélioration du visage (OFF par défaut — coûteux en GPU) */
   faceEnhancer?: boolean;
+  /** Cadence d'envoi des frames au moteur (défaut 20) */
+  targetFps?: number;
+  /** Résolution des frames envoyées (défaut 640×480) */
+  width?: number;
+  height?: number;
 }
 
 export type SwapEngineEvent = "connected" | "disconnected" | "error" | "stats";

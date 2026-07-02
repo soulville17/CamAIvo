@@ -1,4 +1,6 @@
 import { MockSwapEngine } from "@/features/swap-engine/MockSwapEngine";
+import { LocalSwapEngine } from "@/features/swap-engine/LocalSwapEngine";
+import { CloudSwapEngine } from "@/features/swap-engine/CloudSwapEngine";
 import type { SwapEngine, SwapMode } from "@/features/swap-engine/types";
 
 export type { SwapEngine, SwapMode, SwapOptions, SwapStats } from "@/features/swap-engine/types";
@@ -6,17 +8,35 @@ export type { SwapEngine, SwapMode, SwapOptions, SwapStats } from "@/features/sw
 /** Mode configuré au build (mock par défaut : app 100 % testable sans GPU). */
 export const configuredSwapMode: SwapMode = import.meta.env.VITE_SWAP_MODE ?? "mock";
 
-let instance: SwapEngine | null = null;
+/**
+ * Mode effectif d'une session : en build mock tout reste mock ; sinon le
+ * toggle CLOUD/LOCAL du header choisit l'implémentation.
+ */
+export function resolveEffectiveMode(uiMode: "cloud" | "local"): SwapMode {
+  return configuredSwapMode === "mock" ? "mock" : uiMode;
+}
+
+let current: { mode: SwapMode; engine: SwapEngine } | null = null;
+
+function createEngine(mode: SwapMode): SwapEngine {
+  switch (mode) {
+    case "local":
+      return new LocalSwapEngine();
+    case "cloud":
+      return new CloudSwapEngine();
+    default:
+      return new MockSwapEngine();
+  }
+}
 
 /**
- * Fabrique du moteur de swap (singleton).
- * Phase 7 : ajoutera LocalSwapEngine (WebSocket sidecar Python) et
- * CloudSwapEngine (WebRTC vers worker GPU) selon le mode.
+ * Fabrique du moteur (instance courante, recréée si le mode change).
+ * Sans argument : renvoie l'instance courante (ou un mock par défaut).
  */
-export function getSwapEngine(): SwapEngine {
-  if (!instance) {
-    // TODO Phase 7 : switch (configuredSwapMode) → Local / Cloud
-    instance = new MockSwapEngine();
+export function getSwapEngine(mode?: SwapMode): SwapEngine {
+  const target = mode ?? current?.mode ?? configuredSwapMode;
+  if (!current || current.mode !== target) {
+    current = { mode: target, engine: createEngine(target) };
   }
-  return instance;
+  return current.engine;
 }

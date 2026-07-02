@@ -1,6 +1,7 @@
 import { create } from "zustand";
-import { getSwapEngine, configuredSwapMode } from "@/features/swap-engine";
-import type { SwapStats } from "@/features/swap-engine";
+import { getSwapEngine, resolveEffectiveMode } from "@/features/swap-engine";
+import type { SwapEngine, SwapStats } from "@/features/swap-engine";
+import { useUiStore } from "@/stores/uiStore";
 import { estimatePointsUsed, HEARTBEAT_INTERVAL_S } from "@/features/credits/constants";
 import { createSwapSession, sendSessionTick } from "@/features/credits/sessionsApi";
 import { useAuthStore } from "@/features/auth/authStore";
@@ -37,7 +38,8 @@ interface SwapState {
 
 let tickTimer = 0;
 let heartbeatTimer = 0;
-let statsListenerAttached = false;
+/** Moteurs déjà câblés aux listeners (le moteur change avec le mode). */
+const wiredEngines = new WeakSet<SwapEngine>();
 /** Base serveur des points consommés + secondes locales depuis ce point. */
 let serverPointsUsed = 0;
 let secondsSinceServerSync = 0;
@@ -106,11 +108,14 @@ export const useSwapStore = create<SwapState>((set, get) => ({
 
     set({ sessionStatus: "starting", engineError: null, depleted: false });
 
+    // Mode effectif : mock si le build est en mock, sinon le toggle CLOUD/LOCAL
+    const effectiveMode = resolveEffectiveMode(useUiStore.getState().engineMode);
+
     // 1. Session côté serveur (le décompte de points s'y rattache)
     const { sessionId, error: sessionError } = await createSwapSession(
       userId,
       selectedAvatar.id,
-      configuredSwapMode,
+      effectiveMode,
     );
     if (!sessionId) {
       set({ sessionStatus: "idle", engineError: sessionError });
@@ -118,9 +123,9 @@ export const useSwapStore = create<SwapState>((set, get) => ({
     }
 
     // 2. Connexion au moteur de swap
-    const engine = getSwapEngine();
-    if (!statsListenerAttached) {
-      statsListenerAttached = true;
+    const engine = getSwapEngine(effectiveMode);
+    if (!wiredEngines.has(engine)) {
+      wiredEngines.add(engine);
       engine.on("stats", (payload) => set({ stats: payload as SwapStats }));
       engine.on("error", (payload) =>
         set({ engineError: String(payload ?? "Erreur du moteur de swap") }),
@@ -128,13 +133,22 @@ export const useSwapStore = create<SwapState>((set, get) => ({
     }
 
     try {
-      await engine.connect(configuredSwapMode);
+      // Options des Paramètres (transmises au moteur avant la connexion :
+      // le LocalSwapEngine les inclut dans son message init)
+      const settings = useSettingsStore.getState();
+      const [width = 640, height = 480] = settings.resolution.split("x").map(Number);
+      engine.setOptions({
+        transparency: settings.transparency,
+        sharpness: settings.sharpness,
+        mouthMask: settings.mouthMask,
+        faceEnhancer: settings.faceEnhancer,
+        targetFps: settings.targetFps,
+        width,
+        height,
+      });
+      await engine.connect(effectiveMode);
       engine.setInputStream(cameraStream);
       await engine.setAvatar(selectedAvatar.id, selectedAvatar.image_url);
-      // Options des Paramètres appliquées à la session
-      const { transparency, sharpness, mouthMask, faceEnhancer } =
-        useSettingsStore.getState();
-      engine.setOptions({ transparency, sharpness, mouthMask, faceEnhancer });
     } catch (err) {
       set({
         sessionStatus: "idle",

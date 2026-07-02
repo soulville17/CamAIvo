@@ -2,6 +2,10 @@ import { create } from "zustand";
 
 export type EngineMode = "cloud" | "local";
 
+/** Mode initial du toggle : suit VITE_SWAP_MODE si local/cloud, sinon cloud. */
+const initialEngineMode: EngineMode =
+  import.meta.env.VITE_SWAP_MODE === "local" ? "local" : "cloud";
+
 interface UiState {
   /** Drawer mobile de la sidebar */
   sidebarOpen: boolean;
@@ -16,7 +20,7 @@ export const useUiStore = create<UiState>((set) => ({
   sidebarOpen: false,
   openSidebar: () => set({ sidebarOpen: true }),
   closeSidebar: () => set({ sidebarOpen: false }),
-  engineMode: "cloud",
+  engineMode: initialEngineMode,
   toggleEngineMode: () =>
     set((s) => ({ engineMode: s.engineMode === "cloud" ? "local" : "cloud" })),
 }));

@@ -1,11 +1,5 @@
-import type {
-  SwapEngine,
-  SwapEngineEvent,
-  SwapEngineListener,
-  SwapMode,
-  SwapOptions,
-  SwapStats,
-} from "@/features/swap-engine/types";
+import { BaseSwapEngine } from "@/features/swap-engine/BaseSwapEngine";
+import type { SwapMode } from "@/features/swap-engine/types";
 
 const CANVAS_WIDTH = 640;
 const CANVAS_HEIGHT = 480;
@@ -17,7 +11,7 @@ const OUTPUT_FPS = 30;
  * de l'avatar, et renvoie le résultat via canvas.captureStream(30).
  * Permet de démontrer TOUTE l'app sans GPU ni serveur.
  */
-export class MockSwapEngine implements SwapEngine {
+export class MockSwapEngine extends BaseSwapEngine {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private video: HTMLVideoElement;
@@ -26,16 +20,9 @@ export class MockSwapEngine implements SwapEngine {
   private rafId = 0;
   private statsTimer = 0;
   private connected = false;
-  private options: Required<SwapOptions> = {
-    transparency: 0.85,
-    sharpness: 0.5,
-    mouthMask: false,
-    faceEnhancer: false,
-  };
-  private stats: SwapStats = { fps: 0, latencyMs: 0, connection: "down" };
-  private listeners = new Map<SwapEngineEvent, Set<SwapEngineListener>>();
 
   constructor() {
+    super();
     this.canvas = document.createElement("canvas");
     this.canvas.width = CANVAS_WIDTH;
     this.canvas.height = CANVAS_HEIGHT;
@@ -89,27 +76,6 @@ export class MockSwapEngine implements SwapEngine {
       img.src = imageUrl;
     });
     this.avatarImg = img;
-  }
-
-  setOptions(opts: SwapOptions): void {
-    this.options = { ...this.options, ...opts };
-  }
-
-  on(event: SwapEngineEvent, cb: SwapEngineListener): void {
-    if (!this.listeners.has(event)) this.listeners.set(event, new Set());
-    this.listeners.get(event)?.add(cb);
-  }
-
-  off(event: SwapEngineEvent, cb: SwapEngineListener): void {
-    this.listeners.get(event)?.delete(cb);
-  }
-
-  getStats(): SwapStats {
-    return this.stats;
-  }
-
-  private emit(event: SwapEngineEvent, payload?: unknown): void {
-    this.listeners.get(event)?.forEach((cb) => cb(payload));
   }
 
   /** Boucle de rendu : webcam + teinte chaude + incrustation avatar. */
