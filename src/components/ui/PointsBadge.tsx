@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from "react";
+import { animate } from "framer-motion";
 import { Coins } from "lucide-react";
 import { formatPoints } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -7,11 +9,21 @@ interface PointsBadgeProps {
   className?: string;
 }
 
-/**
- * Jeton doré + solde de points (header).
- * Le compteur animé (framer-motion) sera branché sur le vrai solde en Phase 3.
- */
+/** Jeton doré + solde de points (header), compteur animé à chaque variation. */
 export function PointsBadge({ points, className }: PointsBadgeProps) {
+  const [display, setDisplay] = useState(points);
+  const previous = useRef(points);
+
+  useEffect(() => {
+    const controls = animate(previous.current, points, {
+      duration: 0.6,
+      ease: "easeOut",
+      onUpdate: (v) => setDisplay(v),
+    });
+    previous.current = points;
+    return () => controls.stop();
+  }, [points]);
+
   const low = points > 0 && points < 100;
   return (
     <div
@@ -28,7 +40,7 @@ export function PointsBadge({ points, className }: PointsBadgeProps) {
           low ? "text-red-400" : "text-token",
         )}
       >
-        {formatPoints(points)}
+        {formatPoints(display)}
       </span>
       <span className="hidden text-xs text-muted sm:inline">pts</span>
     </div>

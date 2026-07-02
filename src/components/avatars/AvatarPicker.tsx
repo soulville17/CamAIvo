@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { AvatarCard } from "@/components/avatars/AvatarCard";
 import type { Avatar } from "@/types/db";
 
@@ -44,13 +45,19 @@ export function AvatarPicker({
 
   return (
     <div className="flex gap-3 overflow-x-auto pb-2">
-      {avatars.map((avatar) => (
-        <AvatarCard
+      {avatars.map((avatar, i) => (
+        <motion.div
           key={avatar.id}
-          avatar={avatar}
-          selected={avatar.id === selectedId}
-          onSelect={onSelect}
-        />
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, delay: i * 0.05 }}
+        >
+          <AvatarCard
+            avatar={avatar}
+            selected={avatar.id === selectedId}
+            onSelect={onSelect}
+          />
+        </motion.div>
       ))}
     </div>
   );
