@@ -4,6 +4,7 @@ import type { SwapStats } from "@/features/swap-engine";
 import { estimatePointsUsed, HEARTBEAT_INTERVAL_S } from "@/features/credits/constants";
 import { createSwapSession, sendSessionTick } from "@/features/credits/sessionsApi";
 import { useAuthStore } from "@/features/auth/authStore";
+import { useSettingsStore } from "@/stores/settingsStore";
 import type { Avatar } from "@/types/db";
 
 export type SessionStatus = "idle" | "starting" | "active" | "stopping";
@@ -62,8 +63,16 @@ export const useSwapStore = create<SwapState>((set, get) => ({
   enableCamera: async () => {
     set({ cameraError: null });
     try {
+      // Contraintes issues des préférences (webcam, résolution, fps — §8.4)
+      const { cameraDeviceId, resolution, targetFps } = useSettingsStore.getState();
+      const [width = 640, height = 480] = resolution.split("x").map(Number);
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: {
+          ...(cameraDeviceId ? { deviceId: { exact: cameraDeviceId } } : {}),
+          width: { ideal: width },
+          height: { ideal: height },
+          frameRate: { ideal: targetFps },
+        },
         audio: false,
       });
       set({ cameraStream: stream });
@@ -122,6 +131,10 @@ export const useSwapStore = create<SwapState>((set, get) => ({
       await engine.connect(configuredSwapMode);
       engine.setInputStream(cameraStream);
       await engine.setAvatar(selectedAvatar.id, selectedAvatar.image_url);
+      // Options des Paramètres appliquées à la session
+      const { transparency, sharpness, mouthMask, faceEnhancer } =
+        useSettingsStore.getState();
+      engine.setOptions({ transparency, sharpness, mouthMask, faceEnhancer });
     } catch (err) {
       set({
         sessionStatus: "idle",

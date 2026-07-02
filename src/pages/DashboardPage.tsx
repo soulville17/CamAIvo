@@ -14,6 +14,7 @@ import { fetchAvatars } from "@/features/avatars/avatarsApi";
 import { useSwapStore } from "@/stores/swapStore";
 import { useAuthStore } from "@/features/auth/authStore";
 import { useUiStore } from "@/stores/uiStore";
+import { useSettingsStore } from "@/stores/settingsStore";
 import { configuredSwapMode } from "@/features/swap-engine";
 import type { Avatar } from "@/types/db";
 
@@ -37,6 +38,7 @@ export function DashboardPage() {
   } = useSwapStore();
   const pointsBalance = useAuthStore((s) => s.profile?.points_balance ?? 0);
   const engineMode = useUiStore((s) => s.engineMode);
+  const watermarkEnabled = useSettingsStore((s) => s.watermarkEnabled);
 
   const [avatars, setAvatars] = useState<Avatar[]>([]);
   const [avatarsLoading, setAvatarsLoading] = useState(true);
@@ -149,7 +151,7 @@ export function DashboardPage() {
             </Badge>
           }
           stream={outputStream}
-          watermark={`CamAIvo · ${watermarkMode}`}
+          watermark={watermarkEnabled ? `CamAIvo · ${watermarkMode}` : undefined}
           placeholder={
             <div className="flex flex-col items-center gap-2 text-center text-muted">
               <Sparkles className="h-8 w-8 text-ember" aria-hidden />

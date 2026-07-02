@@ -29,6 +29,8 @@ interface AuthState {
   refreshProfile: () => Promise<void>;
   /** Met à jour le solde local (après réponse serveur d'un heartbeat/paiement). */
   setPointsBalance: (balance: number) => void;
+  updateDisplayName: (displayName: string) => Promise<{ error: string | null }>;
+  changePassword: (newPassword: string) => Promise<{ error: string | null }>;
 }
 
 /** Traduit les erreurs Supabase courantes en français. */
@@ -124,5 +126,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setPointsBalance: (balance) => {
     const profile = get().profile;
     if (profile) set({ profile: { ...profile, points_balance: balance } });
+  },
+
+  updateDisplayName: async (displayName) => {
+    const profile = get().profile;
+    if (!profile) return { error: "Profil non chargé." };
+    const { error } = await supabase
+      .from("profiles")
+      .update({ display_name: displayName.trim() || null })
+      .eq("id", profile.id);
+    if (error) return { error: "Impossible de mettre à jour le profil." };
+    set({ profile: { ...profile, display_name: displayName.trim() || null } });
+    return { error: null };
+  },
+
+  changePassword: async (newPassword) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    return { error: error ? translateAuthError(error.message) : null };
   },
 }));
