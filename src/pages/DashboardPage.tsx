@@ -49,6 +49,12 @@ export function DashboardPage() {
       setAvatars(avatars);
       setAvatarsError(error);
       setAvatarsLoading(false);
+      // Présélectionne l'avatar par défaut de l'utilisateur
+      const { selectedAvatar, selectAvatar } = useSwapStore.getState();
+      if (!selectedAvatar) {
+        const defaultAvatar = avatars.find((a) => a.is_default && a.status === "ready");
+        if (defaultAvatar) void selectAvatar(defaultAvatar);
+      }
     });
     return () => {
       cancelled = true;
