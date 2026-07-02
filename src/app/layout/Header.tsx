@@ -1,6 +1,7 @@
 import { Cloud, HardDrive, Menu } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { PointsBadge } from "@/components/ui/PointsBadge";
+import { useAuthStore } from "@/features/auth/authStore";
 import { useUiStore } from "@/stores/uiStore";
 import { cn } from "@/lib/cn";
 
@@ -9,6 +10,7 @@ export function Header() {
   const openSidebar = useUiStore((s) => s.openSidebar);
   const engineMode = useUiStore((s) => s.engineMode);
   const toggleEngineMode = useUiStore((s) => s.toggleEngineMode);
+  const pointsBalance = useAuthStore((s) => s.profile?.points_balance ?? 0);
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-glass-border bg-ink/80 px-4 backdrop-blur-xl sm:px-6">
@@ -46,8 +48,7 @@ export function Header() {
         {engineMode}
       </button>
 
-      {/* Solde branché sur Supabase en Phase 3 */}
-      <PointsBadge points={500} />
+      <PointsBadge points={pointsBalance} />
     </header>
   );
 }

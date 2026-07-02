@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppLayout } from "@/app/layout/AppLayout";
 import { AuthLayout } from "@/app/layout/AuthLayout";
+import { RequireAuth, RedirectIfAuth } from "@/features/auth/guards";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { AvatarsPage } from "@/pages/AvatarsPage";
 import { StatsPage } from "@/pages/StatsPage";
@@ -13,27 +14,37 @@ import { NotFoundPage } from "@/pages/NotFoundPage";
 
 /**
  * Routing CamAIvo.
- * En Phase 1, le layout dashboard sera enveloppé d'une garde d'auth
- * (redirection vers /login sans session Supabase).
+ * - Dashboard : session Supabase requise (RequireAuth → redirection /login).
+ * - Pages d'auth : inaccessibles si déjà connecté (RedirectIfAuth).
  */
 export const router = createBrowserRouter([
   {
-    element: <AppLayout />,
+    element: <RequireAuth />,
     children: [
-      { path: "/", element: <Navigate to="/dashboard" replace /> },
-      { path: "/dashboard", element: <DashboardPage /> },
-      { path: "/avatars", element: <AvatarsPage /> },
-      { path: "/stats", element: <StatsPage /> },
-      { path: "/settings", element: <SettingsPage /> },
-      { path: "/recharge", element: <RechargePage /> },
+      {
+        element: <AppLayout />,
+        children: [
+          { path: "/", element: <Navigate to="/dashboard" replace /> },
+          { path: "/dashboard", element: <DashboardPage /> },
+          { path: "/avatars", element: <AvatarsPage /> },
+          { path: "/stats", element: <StatsPage /> },
+          { path: "/settings", element: <SettingsPage /> },
+          { path: "/recharge", element: <RechargePage /> },
+        ],
+      },
     ],
   },
   {
-    element: <AuthLayout />,
+    element: <RedirectIfAuth />,
     children: [
-      { path: "/login", element: <LoginPage /> },
-      { path: "/register", element: <RegisterPage /> },
-      { path: "/forgot-password", element: <ForgotPasswordPage /> },
+      {
+        element: <AuthLayout />,
+        children: [
+          { path: "/login", element: <LoginPage /> },
+          { path: "/register", element: <RegisterPage /> },
+          { path: "/forgot-password", element: <ForgotPasswordPage /> },
+        ],
+      },
     ],
   },
   { path: "*", element: <NotFoundPage /> },
