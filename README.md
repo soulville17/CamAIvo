@@ -35,9 +35,9 @@ L'app tourne entièrement en mode `mock` (`VITE_SWAP_MODE=mock`) sans GPU ni bac
 ## Avancement (phases)
 
 - [x] **Phase 0** — Setup : Vite/TS/Tailwind, design tokens, logo, routing, layout (sidebar + header + bulle d'aide), primitives UI
-- [ ] Phase 1 — Supabase & Auth
-- [ ] Phase 2 — Dashboard Live Swap (mode mock)
-- [ ] Phase 3 — Système de points (Edge Function `consume-points`)
+- [x] **Phase 1** — Supabase & Auth : schéma + RLS + trigger profil, login/register/forgot, routes protégées
+- [x] **Phase 2** — Dashboard Live Swap (mode mock) : SwapEngine, webcam, avatars, start/stop, timer
+- [x] **Phase 3** — Système de points : Edge Function `consume-points`, heartbeats 10 s, débit serveur atomique, coupure à 0
 - [ ] Phase 4 — Mes Avatars
 - [ ] Phase 5 — Recharge / Paiements
 - [ ] Phase 6 — Statistiques & Paramètres

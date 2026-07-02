@@ -27,6 +27,8 @@ interface AuthState {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   refreshProfile: () => Promise<void>;
+  /** Met à jour le solde local (après réponse serveur d'un heartbeat/paiement). */
+  setPointsBalance: (balance: number) => void;
 }
 
 /** Traduit les erreurs Supabase courantes en français. */
@@ -117,5 +119,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!userId) return;
     const profile = await fetchProfile(userId);
     set({ profile });
+  },
+
+  setPointsBalance: (balance) => {
+    const profile = get().profile;
+    if (profile) set({ profile: { ...profile, points_balance: balance } });
   },
 }));

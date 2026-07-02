@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { formatPoints } from "@/lib/format";
 
 interface PlanUsageCardProps {
   email: string;
@@ -31,7 +32,7 @@ export function PlanUsageCard({
         <div className="flex items-center justify-between text-[11px] text-muted">
           <span>Points restants</span>
           <span className="font-semibold tabular-nums text-snow">
-            {pointsBalance.toLocaleString("fr-FR")}/{pointsQuota.toLocaleString("fr-FR")}
+            {formatPoints(pointsBalance)}/{formatPoints(pointsQuota)}
           </span>
         </div>
         <ProgressBar value={pointsBalance} max={pointsQuota} />

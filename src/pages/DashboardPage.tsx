@@ -29,6 +29,7 @@ export function DashboardPage() {
     pointsUsed,
     stats,
     engineError,
+    depleted,
     enableCamera,
     selectAvatar,
     startSwap,
@@ -82,7 +83,16 @@ export function DashboardPage() {
           {engineError}
         </Alert>
       )}
-      {noPoints && (
+      {depleted && (
+        <Alert variant="error" className="mb-4">
+          Points épuisés — ta session a été arrêtée automatiquement.{" "}
+          <Link to="/recharge" className="font-semibold underline">
+            Recharge
+          </Link>{" "}
+          pour continuer à swapper.
+        </Alert>
+      )}
+      {noPoints && !depleted && (
         <Alert variant="error" className="mb-4">
           Points épuisés —{" "}
           <Link to="/recharge" className="font-semibold underline">

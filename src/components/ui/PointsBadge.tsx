@@ -1,4 +1,5 @@
 import { Coins } from "lucide-react";
+import { formatPoints } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
 interface PointsBadgeProps {
@@ -27,7 +28,7 @@ export function PointsBadge({ points, className }: PointsBadgeProps) {
           low ? "text-red-400" : "text-token",
         )}
       >
-        {points.toLocaleString("fr-FR")}
+        {formatPoints(points)}
       </span>
       <span className="hidden text-xs text-muted sm:inline">pts</span>
     </div>
