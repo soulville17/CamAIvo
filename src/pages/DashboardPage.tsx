@@ -23,6 +23,7 @@ export function DashboardPage() {
     cameraError,
     outputStream,
     sessionStatus,
+    sessionMode,
     selectedAvatar,
     elapsedSeconds,
     pointsUsed,
@@ -83,6 +84,13 @@ export function DashboardPage() {
       {engineError && (
         <Alert variant="error" className="mb-4">
           {engineError}
+        </Alert>
+      )}
+      {active && sessionMode && sessionMode !== enginePipeline && (
+        <Alert variant="error" className="mb-4">
+          Cette session tourne encore sur le moteur «&nbsp;{sessionMode === "mock" ? "démo" : sessionMode}&nbsp;».
+          Arrête puis redémarre le swap pour appliquer «&nbsp;
+          {enginePipeline === "mock" ? "démo" : enginePipeline}&nbsp;».
         </Alert>
       )}
       {depleted && (

@@ -18,6 +18,8 @@ interface SwapState {
   sessionStatus: SessionStatus;
   /** Id de la ligne swap_sessions en cours (source de vérité serveur) */
   sessionId: string | null;
+  /** Pipeline avec lequel la session EN COURS a démarré (mock/local/cloud) */
+  sessionMode: string | null;
   selectedAvatar: Avatar | null;
   elapsedSeconds: number;
   /** Points consommés — valeur SERVEUR à chaque heartbeat, estimée entre deux */
@@ -54,6 +56,7 @@ export const useSwapStore = create<SwapState>((set, get) => ({
   outputStream: null,
   sessionStatus: "idle",
   sessionId: null,
+  sessionMode: null,
   selectedAvatar: null,
   elapsedSeconds: 0,
   pointsUsed: 0,
@@ -165,6 +168,7 @@ export const useSwapStore = create<SwapState>((set, get) => ({
       outputStream: engine.getOutputStream(),
       sessionStatus: "active",
       sessionId,
+      sessionMode: effectiveMode,
       elapsedSeconds: 0,
       pointsUsed: 0,
     });
