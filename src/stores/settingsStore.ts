@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { getSwapEngine } from "@/features/swap-engine";
+import { configuredSwapMode, getSwapEngine } from "@/features/swap-engine";
+import type { SwapMode } from "@/features/swap-engine";
 
 export type Resolution = "640x480" | "1280x720" | "1920x1080";
 
@@ -10,6 +11,12 @@ export type Resolution = "640x480" | "1280x720" | "1920x1080";
  * 1 seul visage max, filigrane activé.
  */
 interface SettingsState {
+  /**
+   * Pipeline du moteur : mock (démo sans GPU), local (sidecar Python sur la
+   * machine de l'utilisateur) ou cloud (worker GPU WebRTC). Choisi à chaud
+   * dans Paramètres/header — VITE_SWAP_MODE ne fixe que le défaut.
+   */
+  enginePipeline: SwapMode;
   cameraDeviceId: string | null;
   resolution: Resolution;
   targetFps: 20 | 30;
@@ -21,6 +28,7 @@ interface SettingsState {
   faceEnhancer: boolean;
   watermarkEnabled: boolean;
 
+  setEnginePipeline: (mode: SwapMode) => void;
   setCameraDeviceId: (id: string | null) => void;
   setResolution: (r: Resolution) => void;
   setTargetFps: (fps: 20 | 30) => void;
@@ -40,6 +48,7 @@ export const ENGINE_CONSTANTS = {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set, get) => ({
+      enginePipeline: configuredSwapMode,
       cameraDeviceId: null,
       resolution: "640x480",
       targetFps: 20,
@@ -49,6 +58,7 @@ export const useSettingsStore = create<SettingsState>()(
       faceEnhancer: false, // OFF par défaut (coûteux en GPU)
       watermarkEnabled: true,
 
+      setEnginePipeline: (mode) => set({ enginePipeline: mode }),
       setCameraDeviceId: (id) => set({ cameraDeviceId: id }),
       setResolution: (r) => set({ resolution: r }),
       setTargetFps: (fps) => set({ targetFps: fps }),

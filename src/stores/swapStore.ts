@@ -1,7 +1,6 @@
 import { create } from "zustand";
-import { getSwapEngine, resolveEffectiveMode } from "@/features/swap-engine";
+import { getSwapEngine } from "@/features/swap-engine";
 import type { SwapEngine, SwapStats } from "@/features/swap-engine";
-import { useUiStore } from "@/stores/uiStore";
 import { estimatePointsUsed, HEARTBEAT_INTERVAL_S } from "@/features/credits/constants";
 import { createSwapSession, sendSessionTick } from "@/features/credits/sessionsApi";
 import { useAuthStore } from "@/features/auth/authStore";
@@ -108,8 +107,8 @@ export const useSwapStore = create<SwapState>((set, get) => ({
 
     set({ sessionStatus: "starting", engineError: null, depleted: false });
 
-    // Mode effectif : mock si le build est en mock, sinon le toggle CLOUD/LOCAL
-    const effectiveMode = resolveEffectiveMode(useUiStore.getState().engineMode);
+    // Pipeline choisi dans Paramètres (mock / local / cloud)
+    const effectiveMode = useSettingsStore.getState().enginePipeline;
 
     // 1. Session côté serveur (le décompte de points s'y rattache)
     const { sessionId, error: sessionError } = await createSwapSession(

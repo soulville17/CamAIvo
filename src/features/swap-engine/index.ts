@@ -5,16 +5,12 @@ import type { SwapEngine, SwapMode } from "@/features/swap-engine/types";
 
 export type { SwapEngine, SwapMode, SwapOptions, SwapStats } from "@/features/swap-engine/types";
 
-/** Mode configuré au build (mock par défaut : app 100 % testable sans GPU). */
-export const configuredSwapMode: SwapMode = import.meta.env.VITE_SWAP_MODE ?? "mock";
-
 /**
- * Mode effectif d'une session : en build mock tout reste mock ; sinon le
- * toggle CLOUD/LOCAL du header choisit l'implémentation.
+ * Mode par défaut configuré au build (mock : app 100 % testable sans GPU).
+ * L'utilisateur peut changer de pipeline à chaud dans Paramètres
+ * (settingsStore.enginePipeline).
  */
-export function resolveEffectiveMode(uiMode: "cloud" | "local"): SwapMode {
-  return configuredSwapMode === "mock" ? "mock" : uiMode;
-}
+export const configuredSwapMode: SwapMode = import.meta.env.VITE_SWAP_MODE ?? "mock";
 
 let current: { mode: SwapMode; engine: SwapEngine } | null = null;
 

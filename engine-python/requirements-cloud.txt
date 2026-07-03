@@ -1,0 +1,4 @@
+# Worker cloud CamAIvo (en plus de requirements.txt)
+-r requirements.txt
+aiortc>=1.9
+av>=12.0

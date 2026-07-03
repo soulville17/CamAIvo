@@ -23,3 +23,9 @@ npm-debug.log*
 
 # Supabase local
 supabase/.temp
+
+# Python
+__pycache__/
+*.pyc
+engine-python/models/
+engine-python/.venv/

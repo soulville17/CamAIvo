@@ -208,21 +208,31 @@ export class LocalSwapEngine extends BaseSwapEngine {
     return this.outputStream;
   }
 
-  /** Envoie l'image source en base64 : le sidecar extrait l'embedding du visage. */
+  /**
+   * Envoie l'image source en JPEG base64 : le sidecar extrait l'embedding.
+   * L'image est rasterisée via canvas — indispensable pour les avatars SVG
+   * (publics) et WebP, qu'OpenCV ne décode pas côté Python.
+   */
   async setAvatar(avatarId: string, imageUrl: string): Promise<void> {
     const ws = this.ws;
     if (!ws || ws.readyState !== WebSocket.OPEN) {
       throw new Error("Moteur local non connecté.");
     }
-    const response = await fetch(imageUrl);
-    if (!response.ok) throw new Error("Impossible de charger l'image de l'avatar");
-    const blob = await response.blob();
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(new Error("Lecture de l'image impossible"));
-      reader.readAsDataURL(blob);
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () =>
+        reject(new Error("Impossible de charger l'image de l'avatar"));
+      img.src = imageUrl;
     });
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth || 512;
+    canvas.height = img.naturalHeight || 512;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas 2D non supporté par ce navigateur");
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
 
     ws.send(JSON.stringify({ type: "set_avatar", avatar_id: avatarId, image: dataUrl }));
 

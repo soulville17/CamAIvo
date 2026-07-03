@@ -13,9 +13,7 @@ import { AvatarPicker } from "@/components/avatars/AvatarPicker";
 import { fetchAvatars } from "@/features/avatars/avatarsApi";
 import { useSwapStore } from "@/stores/swapStore";
 import { useAuthStore } from "@/features/auth/authStore";
-import { useUiStore } from "@/stores/uiStore";
 import { useSettingsStore } from "@/stores/settingsStore";
-import { configuredSwapMode } from "@/features/swap-engine";
 import type { Avatar } from "@/types/db";
 
 /** LIVE SWAP — écran principal : caméras, contrôles, avatars. */
@@ -37,7 +35,7 @@ export function DashboardPage() {
     stopSwap,
   } = useSwapStore();
   const pointsBalance = useAuthStore((s) => s.profile?.points_balance ?? 0);
-  const engineMode = useUiStore((s) => s.engineMode);
+  const enginePipeline = useSettingsStore((s) => s.enginePipeline);
   const watermarkEnabled = useSettingsStore((s) => s.watermarkEnabled);
 
   const [avatars, setAvatars] = useState<Avatar[]>([]);
@@ -67,13 +65,9 @@ export function DashboardPage() {
   const noPoints = pointsBalance <= 0;
   const startDisabled = !cameraStream || !selectedAvatar || noPoints;
 
-  // Libellé du watermark selon le mode réel du moteur
+  // Libellé du watermark selon le pipeline du moteur
   const watermarkMode =
-    configuredSwapMode === "mock"
-      ? "Mock"
-      : engineMode === "cloud"
-        ? "Cloud"
-        : "Local";
+    enginePipeline === "mock" ? "Démo" : enginePipeline === "cloud" ? "Cloud" : "Local";
 
   return (
     <motion.div

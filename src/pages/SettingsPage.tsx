@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
-import { Cloud, HardDrive, LogOut, RefreshCw } from "lucide-react";
+import { Cloud, FlaskConical, HardDrive, LogOut, RefreshCw } from "lucide-react";
 import { PageHeading } from "@/components/ui/PageHeading";
 import { GlassPanel } from "@/components/ui/GlassPanel";
 import { Button } from "@/components/ui/Button";
@@ -8,12 +8,12 @@ import { Input } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Alert";
 import { Switch } from "@/components/ui/Switch";
 import { useAuthStore } from "@/features/auth/authStore";
-import { useUiStore } from "@/stores/uiStore";
 import {
   ENGINE_CONSTANTS,
   useSettingsStore,
   type Resolution,
 } from "@/stores/settingsStore";
+import type { SwapMode } from "@/features/swap-engine";
 import { cn } from "@/lib/cn";
 
 function SectionTitle({ children }: { children: string }) {
@@ -30,8 +30,6 @@ export function SettingsPage() {
   const updateDisplayName = useAuthStore((s) => s.updateDisplayName);
   const changePassword = useAuthStore((s) => s.changePassword);
   const signOut = useAuthStore((s) => s.signOut);
-  const engineMode = useUiStore((s) => s.engineMode);
-  const toggleEngineMode = useUiStore((s) => s.toggleEngineMode);
   const settings = useSettingsStore();
 
   // ── Profil ──
@@ -151,35 +149,41 @@ export function SettingsPage() {
       <section>
         <SectionTitle>Préférences de swap</SectionTitle>
         <GlassPanel className="space-y-6">
-          {/* Mode moteur */}
+          {/* Pipeline moteur */}
           <div>
-            <p className="mb-2 text-sm font-medium text-snow">Mode du moteur</p>
-            <div className="flex gap-2">
-              {(["cloud", "local"] as const).map((mode) => (
+            <p className="mb-2 text-sm font-medium text-snow">Moteur de swap</p>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  { mode: "mock", icon: FlaskConical, label: "Démo" },
+                  { mode: "local", icon: HardDrive, label: "Local" },
+                  { mode: "cloud", icon: Cloud, label: "Cloud" },
+                ] as { mode: SwapMode; icon: typeof Cloud; label: string }[]
+              ).map(({ mode, icon: Icon, label }) => (
                 <button
                   key={mode}
-                  onClick={() => engineMode !== mode && toggleEngineMode()}
+                  onClick={() => settings.setEnginePipeline(mode)}
                   className={cn(
                     "flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold uppercase transition-colors",
-                    engineMode === mode
-                      ? mode === "cloud"
-                        ? "border-cloud/50 bg-cloud/15 text-cloud"
-                        : "border-live/50 bg-live/15 text-live"
+                    settings.enginePipeline === mode
+                      ? mode === "mock"
+                        ? "border-token/50 bg-token/15 text-token"
+                        : mode === "local"
+                          ? "border-live/50 bg-live/15 text-live"
+                          : "border-cloud/50 bg-cloud/15 text-cloud"
                       : "border-glass-border text-muted hover:text-snow",
                   )}
                 >
-                  {mode === "cloud" ? (
-                    <Cloud className="h-4 w-4" aria-hidden />
-                  ) : (
-                    <HardDrive className="h-4 w-4" aria-hidden />
-                  )}
-                  {mode}
+                  <Icon className="h-4 w-4" aria-hidden />
+                  {label}
                 </button>
               ))}
             </div>
             <p className="mt-1.5 text-xs text-muted">
-              Local = moteur sur ta machine (GPU) · Cloud = serveur distant. Sans
-              moteur branché, l&rsquo;app tourne en mode démonstration (mock).
+              <strong>Démo</strong> = simulation sans GPU (aucun vrai swap) ·{" "}
+              <strong>Local</strong> = sidecar CamAIvo sur ta machine (vrai swap,
+              GPU recommandé) · <strong>Cloud</strong> = worker GPU distant.
+              Le changement prend effet au prochain démarrage de swap.
             </p>
           </div>
 

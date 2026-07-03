@@ -1,0 +1,8 @@
+# Sidecar local CamAIvo
+websockets>=12.0
+opencv-python>=4.9
+numpy>=1.26,<2.0          # insightface n'est pas encore compatible numpy 2
+insightface==0.7.3
+onnxruntime-gpu>=1.17 ; sys_platform != "darwin"   # GPU NVIDIA (CUDA)
+onnxruntime>=1.17 ; sys_platform == "darwin"       # macOS : CPU/CoreML
+# Sans GPU NVIDIA : remplace onnxruntime-gpu par onnxruntime
