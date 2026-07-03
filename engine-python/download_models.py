@@ -11,8 +11,10 @@ import urllib.request
 
 MODEL_DIR = "models"
 MODEL_PATH = os.path.join(MODEL_DIR, "inswapper_128.onnx")
-# Miroirs connus du modèle publié par deepinsight (essayés dans l'ordre)
+# Miroirs connus du modèle publié par deepinsight (essayés dans l'ordre —
+# GitHub en premier : plus fiable sur les connexions où HuggingFace coupe)
 URLS = [
+    "https://github.com/facefusion/facefusion-assets/releases/download/models/inswapper_128.onnx",
     "https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx",
     "https://huggingface.co/datasets/Gourieff/ReActor/resolve/main/models/inswapper_128.onnx",
 ]
