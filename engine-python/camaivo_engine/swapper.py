@@ -164,4 +164,10 @@ def load_engine(demo: bool, model_path: str | None, use_gpu: bool) -> BaseEngine
             "→ lance d'abord :  python download_models.py\n"
             "   (ou définis INSWAPPER_MODEL_PATH)"
         )
+    if os.path.getsize(path) < 400 * 1024 * 1024:
+        raise SystemExit(
+            f"Modèle corrompu : {path} ne fait que "
+            f"{os.path.getsize(path)} octets (attendu ~530 Mo).\n"
+            "→ supprime le fichier puis relance :  python download_models.py"
+        )
     return FaceSwapEngine(path, use_gpu=use_gpu)
