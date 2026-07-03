@@ -165,6 +165,13 @@ async def main() -> None:
     parser = argparse.ArgumentParser(description="Sidecar CamAIvo (moteur local)")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8787)
+    parser.add_argument(
+        "--engine",
+        choices=["inswapper", "liveportrait"],
+        default="inswapper",
+        help="inswapper = swap du visage seul · liveportrait = tout l'avatar "
+        "animé par tes mouvements (style MirageCam, GPU recommandé)",
+    )
     parser.add_argument("--model", default=None, help="chemin de inswapper_128.onnx")
     parser.add_argument("--cpu", action="store_true", help="forcer le CPU (lent)")
     parser.add_argument(
@@ -172,7 +179,12 @@ async def main() -> None:
     )
     args = parser.parse_args()
 
-    engine = load_engine(demo=args.demo, model_path=args.model, use_gpu=not args.cpu)
+    engine = load_engine(
+        demo=args.demo,
+        model_path=args.model,
+        use_gpu=not args.cpu,
+        engine_kind=args.engine,
+    )
 
     async with websockets.serve(
         make_handler(engine), args.host, args.port, max_size=8 * 1024 * 1024

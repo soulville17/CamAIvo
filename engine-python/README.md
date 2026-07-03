@@ -31,6 +31,34 @@ Ton visage est remplacé par l'avatar sélectionné, en vrai.
 - Performances attendues : RTX 3060+ ≈ 15-25 fps en 640×480 ; le
   `face_enhancer` reste OFF par défaut (spec CamAIvo).
 
+## Mode LivePortrait — remplacement COMPLET de l'apparence 🎭
+
+`sidecar_server.py --engine liveportrait` ne remplace pas que le visage :
+**toute l'image de l'avatar** (cheveux, vêtements, fond) est animée par tes
+mouvements et expressions — l'effet « MirageCam ». GPU NVIDIA requis pour le
+temps réel (CPU ≈ 1 fps).
+
+```powershell
+# 1. Cloner FasterLivePortrait À CÔTÉ de CamAIvo (une seule fois)
+cd $HOME\Documents
+git clone https://github.com/warmshao/FasterLivePortrait
+cd FasterLivePortrait
+
+# 2. Ses dépendances (dans le venv CamAIvo déjà activé) + ses modèles ONNX
+pip install -r requirements.txt
+huggingface-cli download warmshao/FasterLivePortrait --local-dir .\checkpoints
+
+# 3. Lancer le sidecar en mode liveportrait
+cd $HOME\Documents\CamAIvo\engine-python
+$env:FLP_DIR = "$HOME\Documents\FasterLivePortrait"
+python sidecar_server.py --engine liveportrait
+```
+
+Conseils : l'avatar doit être un **portrait photo net** (buste, face caméra,
+fond simple) — c'est cette image entière qui devient « toi ». Les avatars
+dessinés (SVG) fonctionnent mal ici ; upload une vraie photo dans
+« Mes avatars ».
+
 ## Mode CLOUD — architecture
 
 ```

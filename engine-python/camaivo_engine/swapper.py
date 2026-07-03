@@ -152,9 +152,106 @@ class DemoEngine(BaseEngine):
         return out
 
 
-def load_engine(demo: bool, model_path: str | None, use_gpu: bool) -> BaseEngine:
+class LivePortraitEngine(BaseEngine):
+    """
+    Animation de portrait (style « MirageCam ») : TOUTE l'image de l'avatar
+    (cheveux, vêtements, fond) est animée par les mouvements et expressions
+    de la webcam — remplacement complet de l'apparence, pas un simple swap
+    du visage.
+
+    S'appuie sur FasterLivePortrait (https://github.com/warmshao/FasterLivePortrait),
+    à cloner à côté et pointer via la variable d'env FLP_DIR (voir README).
+    GPU NVIDIA fortement recommandé (temps réel) ; CPU ≈ 1 fps.
+    """
+
+    def __init__(self, use_gpu: bool = True):
+        import sys
+        import tempfile
+
+        flp_dir = os.environ.get("FLP_DIR", "")
+        if not flp_dir or not os.path.isdir(flp_dir):
+            raise SystemExit(
+                "Mode liveportrait : FasterLivePortrait introuvable.\n"
+                "→ suis la section « Mode LivePortrait » du README :\n"
+                "   git clone https://github.com/warmshao/FasterLivePortrait\n"
+                "   (installer ses dépendances + modèles), puis définir FLP_DIR."
+            )
+        sys.path.insert(0, flp_dir)
+        try:
+            from omegaconf import OmegaConf
+            from src.pipelines.faster_live_portrait_pipeline import (
+                FasterLivePortraitPipeline,
+            )
+        except ImportError as exc:
+            raise SystemExit(
+                f"Dépendances FasterLivePortrait manquantes ({exc}).\n"
+                f"→ pip install -r {os.path.join(flp_dir, 'requirements.txt')}"
+            ) from exc
+
+        cfg_path = os.path.join(flp_dir, "configs", "onnx_infer.yaml")
+        cfg = OmegaConf.load(cfg_path)
+        # Les chemins du yaml sont relatifs au repo FasterLivePortrait :
+        # on les rend absolus pour pouvoir lancer le sidecar d'ailleurs.
+        for model_cfg in cfg.models.values():
+            path = model_cfg.get("model_path")
+            if isinstance(path, str) and path.startswith("."):
+                model_cfg.model_path = os.path.normpath(os.path.join(flp_dir, path))
+
+        print("[engine] chargement de FasterLivePortrait…")
+        t0 = time.time()
+        self.pipe = FasterLivePortraitPipeline(cfg=cfg, is_animal=False)
+        print(f"[engine] LivePortrait prêt en {time.time() - t0:.1f} s")
+        if not use_gpu:
+            print("[engine] ⚠ CPU : attends-toi à ~1 fps — GPU NVIDIA recommandé")
+
+        self._tmpdir = tempfile.mkdtemp(prefix="camaivo_lp_")
+        self.ready = False
+        self.options: dict = {}
+
+    def set_avatar(self, image_bgr: np.ndarray) -> None:
+        # FasterLivePortrait prépare la source depuis un fichier
+        src_path = os.path.join(self._tmpdir, "avatar.jpg")
+        cv2.imwrite(src_path, image_bgr)
+        ok = self.pipe.prepare_source(src_path, realtime=True)
+        if not ok:
+            raise ValueError(
+                "Aucun visage exploitable sur la photo de l'avatar "
+                "(portrait net, face caméra, une seule personne)."
+            )
+        self.ready = True
+
+    def set_options(self, options: dict) -> None:
+        self.options.update(options)
+
+    def process(self, frame_bgr: np.ndarray) -> np.ndarray:
+        if not self.ready:
+            return frame_bgr
+        try:
+            _dri_crop, out_crop, out_org = self.pipe.run(
+                frame_bgr, self.pipe.src_imgs[0], self.pipe.src_infos[0],
+            )
+        except Exception:
+            # Pas de visage détecté sur cette frame → on renvoie la webcam
+            return frame_bgr
+        out = out_org if out_org is not None else out_crop
+        if out is None:
+            return frame_bgr
+        # Sortie RGB → BGR pour l'encodage JPEG
+        return cv2.cvtColor(np.asarray(out), cv2.COLOR_RGB2BGR)
+
+
+def load_engine(
+    demo: bool,
+    model_path: str | None,
+    use_gpu: bool,
+    engine_kind: str = "inswapper",
+) -> BaseEngine:
     if demo:
         return DemoEngine()
+
+    if engine_kind == "liveportrait":
+        return LivePortraitEngine(use_gpu=use_gpu)
+
     path = model_path or os.environ.get(
         "INSWAPPER_MODEL_PATH", "models/inswapper_128.onnx"
     )
