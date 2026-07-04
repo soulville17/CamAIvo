@@ -201,7 +201,9 @@ class LivePortraitEngine(BaseEngine):
             path = model_cfg.get("model_path")
             if isinstance(path, str):
                 model_cfg.model_path = resolve(path)
-            elif isinstance(path, (list, tuple)):
+            elif path is not None:
+                # ListConfig d'OmegaConf (n'est PAS une list Python) :
+                # on itère et on reconstruit une vraie liste résolue.
                 model_cfg.model_path = [
                     resolve(p) if isinstance(p, str) else p for p in path
                 ]
