@@ -188,14 +188,23 @@ class LivePortraitEngine(BaseEngine):
                 f"→ pip install -r {os.path.join(flp_dir, 'requirements.txt')}"
             ) from exc
 
+        def resolve(p: str) -> str:
+            return os.path.normpath(os.path.join(flp_dir, p)) if p.startswith(".") else p
+
         cfg_path = os.path.join(flp_dir, "configs", "onnx_infer.yaml")
         cfg = OmegaConf.load(cfg_path)
         # Les chemins du yaml sont relatifs au repo FasterLivePortrait :
         # on les rend absolus pour pouvoir lancer le sidecar d'ailleurs.
+        # model_path est soit une chaîne, soit une liste de chaînes
+        # (ex. face_analysis : [détecteur, landmarks]).
         for model_cfg in cfg.models.values():
             path = model_cfg.get("model_path")
-            if isinstance(path, str) and path.startswith("."):
-                model_cfg.model_path = os.path.normpath(os.path.join(flp_dir, path))
+            if isinstance(path, str):
+                model_cfg.model_path = resolve(path)
+            elif isinstance(path, (list, tuple)):
+                model_cfg.model_path = [
+                    resolve(p) if isinstance(p, str) else p for p in path
+                ]
 
         print("[engine] chargement de FasterLivePortrait…")
         t0 = time.time()
